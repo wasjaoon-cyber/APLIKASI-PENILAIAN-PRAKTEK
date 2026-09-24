@@ -1,0 +1,7 @@
+Jumlah siswa dari 6 file Excel: 195
+Kelas: X TSM 1, X TSM 2, XI TSM 1, XI TSM 2, XII TSM 1, XII TSM 2.
+
+Aplikasi: pilih Kelas -> pilih Nama Siswa -> NIS/NISN otomatis.
+Web App: https://script.google.com/macros/s/AKfycbx05ulKSrZFB2I5XZoxhYt5QbHmlt6LTq4XoUuPmtXtm5S4PZMjS6IGBLPuKDcLbi51oA/exec
+
+Code.gs menyediakan sheet Siswa dan Nilai Praktik. Setelah daftar siswa ditempel ke sheet Siswa, daftar dapat dikelola dari Google Sheets.
