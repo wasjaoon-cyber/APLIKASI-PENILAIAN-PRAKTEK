@@ -54,14 +54,39 @@ async function onlineLoad(){
   if(!j.ok) throw new Error(j.message||"Server mengembalikan kesalahan.");
   return Array.isArray(j.data)?j.data:[];
 }
+function normalizeKey(v){
+  return String(v ?? "").trim().toLowerCase().replace(/\\s+/g," ");
+}
+function practiceKey(r){
+  const identitas = normalizeKey(r.nis) || normalizeKey(r.name);
+  return [
+    identitas,
+    normalizeKey(r.kelas),
+    normalizeKey(r.praktik),
+    normalizeKey(r.tugas),
+    normalizeKey(r.tanggal)
+  ].join("|");
+}
+function dedupeRecords(rows){
+  const map = new Map();
+  (Array.isArray(rows) ? rows : []).forEach(r=>{
+    const key = practiceKey(r);
+    if(!key || key === "||||") return;
+    // Data terakhir menang jika ada duplikat.
+    map.set(key,r);
+  });
+  return Array.from(map.values());
+}
 async function syncOnline(){
   const btn=$("sync");
   if(btn) {btn.disabled=true;btn.textContent="⏳ Sinkronisasi...";}
   try{
     const server=await onlineLoad();
-    put(K,server);
+    const clean=dedupeRecords(server);
+    put(K,clean);
     filters();
-    alert("Sinkronisasi berhasil. Data dari Google Sheets sudah dimuat.");
+    show();
+    alert("Sinkronisasi berhasil. Data dari Google Sheets sudah dimuat.\nJumlah data unik: "+clean.length);
   }catch(e){
     alert("Sinkronisasi gagal. Periksa koneksi internet dan Web App Google Apps Script.\n\n"+e.message);
   }finally{
@@ -116,7 +141,13 @@ function filters(){
   jobsRender();
   show();
 }
-function data(){let k=$("fk").value,p=$("fp").value;return get(K,[]).filter(x=>(!k||x.kelas===k)&&(!p||x.praktik===p))}
+function data(){
+  let k=$("fk").value,p=$("fp").value;
+  const clean=dedupeRecords(get(K,[]));
+  // Simpan kembali data unik agar duplikat lama di browser ikut dibersihkan.
+  put(K,clean);
+  return clean.filter(x=>(!k||x.kelas===k)&&(!p||x.praktik===p));
+}
 function show(){let a=data();$("rb").innerHTML=a.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.nis)}</td><td>${esc(r.kelas)}</td><td>${esc(r.praktik)}</td><td>${r.tanggal}</td><td><b>${r.score.toFixed(2)}</b></td><td><span class="badge ${r.score>=75?"ok":"no"}">${r.score>=75?"KOMPETEN":"BELUM KOMPETEN"}</span></td></tr>`).join("");$("jml").textContent="Jumlah data: "+a.length}
 $("show").onclick=show;
 $("sync").onclick=syncOnline;
